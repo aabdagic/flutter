@@ -42,14 +42,18 @@ class FlutterErrorDetails {
   /// The stack trace from where the [exception] was thrown (as opposed to where
   /// it was caught).
   ///
+  /// When not supplied during [FlutterErrorDetails] creation, defaults to
+  /// [StackTrace.current]. This is appropriate when [FlutterErrorDetails] is
+  /// being created in response to an error condition as opposed to an exception
+  /// being caught from elsewhere.
+  ///
   /// StackTrace objects are opaque except for their [toString] function.
   ///
-  /// If this field is not null, then the [stackFilter] callback, if any, will
-  /// be called with the result of calling [toString] on this object and
-  /// splitting that result on line breaks. If there's no [stackFilter]
-  /// callback, then [FlutterError.defaultStackFilter] is used instead. That
-  /// function expects the stack to be in the format used by
-  /// [StackTrace.toString].
+  /// [stackFilter] callback, if any, will be called with the result of calling
+  /// [toString] on this object and splitting that result on line breaks. If
+  /// there's no [stackFilter] callback, then [FlutterError.defaultStackFilter]
+  /// is used instead. That function expects the stack to be in the format used
+  /// by [StackTrace.toString].
   final StackTrace stack;
 
   /// A human-readable brief name describing the library that caught the error
@@ -177,6 +181,17 @@ class FlutterErrorDetails {
     }
     return buffer.toString().trimRight();
   }
+
+  /// A copy of this [FlutterErrorDetails] object with the [stack] value
+  /// replaced.
+  FlutterErrorDetails _withStack(StackTrace stack) => FlutterErrorDetails(
+      exception: exception,
+      stack: stack,
+      library: library,
+      context: context,
+      stackFilter: stackFilter,
+      informationCollector: informationCollector,
+      silent: silent);
 }
 
 /// Error class used to report Flutter-specific assertion failures and
@@ -408,6 +423,8 @@ class FlutterError extends AssertionError {
   /// Calls [onError] with the given details, unless it is null.
   static void reportError(FlutterErrorDetails details) {
     assert(details != null);
+    if (details.stack == null)
+      details = details._withStack(StackTrace.current);
     assert(details.exception != null);
     if (onError != null)
       onError(details);

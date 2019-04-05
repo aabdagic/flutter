@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 import 'package:flutter/foundation.dart';
-import '../flutter_test_alternative.dart';
 
+import '../flutter_test_alternative.dart';
 import 'capture_output.dart';
 
 void main() {
@@ -92,4 +92,30 @@ void main() {
       '  null',
     );
   });
+
+  group('reportError', () {
+    setUp(() => FlutterError.resetErrorCount());
+
+    test('uses StackTrace.current when one is not provided', () {
+      final List<String> log = captureOutput(_invokeReportError);
+
+      expect(log, contains(contains('Example exception')));
+      expect(log, contains(contains('_invokeReportError')));
+    });
+
+    test('uses the provided StackTrace', () {
+      final List<String> log = captureOutput(() =>
+          _invokeReportError(stack: StackTrace.current));
+
+      expect(log, contains(contains('Example exception')));
+      expect(log, isNot(contains(contains('_invokeReportError'))));
+    });
+  });
+}
+
+void _invokeReportError({StackTrace stack}) {
+  FlutterError.reportError(FlutterErrorDetails(
+    exception: 'Example exception',
+    stack: stack,
+  ));
 }
